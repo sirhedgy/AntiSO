@@ -1,0 +1,19 @@
+# build files
+bin/
+obj/
+/packages/
+
+# user-specific settings
+*.user
+
+# IntelliJ project files
+.idea
+*.iml
+
+# VS Code project files
+.vscode
+*.code-workspace
+
+#mac files
+.DS_Store
+

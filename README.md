@@ -1,0 +1,1 @@
+This is a library that is supposed to use new C# 8.0 Code Generators to automatically transform recursive methods into equivalent ones that use an explicit on-heap Stack to run an thus avoid stack overflow. 
