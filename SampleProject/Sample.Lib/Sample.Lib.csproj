@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+        <AssemblyName>Sample.Lib</AssemblyName>
+        <RootNamespace>Sample.Lib</RootNamespace>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+
+    <PropertyGroup>
+        <AntiSOLibDir>$(ProjectDir)..\CompiledLib\</AntiSOLibDir>
+    </PropertyGroup>
+    <ItemGroup>
+        <!--    reference the AntiSO.Shared assembly -->
+        <Reference Include="$(AntiSOLibDir)\AntiSO.Shared.dll" />
+
+        <!--    Add to Analyzer both AntiSO.Shared and AntiSO.CodeGen assemblies -->
+        <Analyzer Include="$(AntiSOLibDir)\AntiSO.CodeGen.dll;$(AntiSOLibDir)\AntiSO.Shared.dll;" />
+    </ItemGroup>
+
+</Project>

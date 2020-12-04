@@ -1,12 +1,12 @@
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using RecursionCodeGen;
+using AntiSO;
+using AntiSO.Infrastructure;
 
-namespace ExampleApp
+namespace AntiSOUsageTests
 {
-    static class SimpleDoubleRecursion
+    static partial class SimpleDoubleRecursion
     {
         static int F0(int n)
         {
@@ -18,7 +18,18 @@ namespace ExampleApp
         {
             if (n == 0)
                 return 0;
+            // this kind of code is not supported yet
             return F1Rec(F1Rec(n - 1)) + 1;
+        }
+
+        [GenerateSafeRecursion]
+        static int F3Rec(int n)
+        {
+            if (n == 0)
+                return 0;
+            var res = F3Rec(n - 1);
+            res = F3Rec(res);
+            return res + 1;
         }
 
 
@@ -39,11 +50,11 @@ namespace ExampleApp
 
         internal sealed class F2Calculator : SimpleRecursionRunner<F2CallParams, int>
         {
-
             internal int Calculate(int n)
             {
                 return RunRecursion(new F2CallParams(n));
             }
+
             protected override IEnumerator<F2CallParams> ComputeImpl(F2CallParams callParams)
             {
                 if (callParams.n == 0)
@@ -65,6 +76,7 @@ namespace ExampleApp
         {
             public readonly string name;
             public readonly Func<int, int> fn;
+
             public Impl(string name, Func<int, int> fn)
             {
                 this.name = name;
@@ -72,17 +84,18 @@ namespace ExampleApp
             }
         }
 
-        public static void TestRec()
+        public static void TestDoubleRec()
         {
             Console.WriteLine("================================================================================================");
             Impl[] impls = new Impl[]
             {
                 new Impl("F1Rec", F1Rec),
-                new Impl("F2NoRec", F2NoRec)
+                new Impl("F2NoRec", F2NoRec),
+                new Impl("F3Rec_GenSafeRec", F3Rec_GenSafeRec)
             };
 
             const bool logGood = true;
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i <= 20; i++)
             {
                 if (logGood)
                     Console.WriteLine($"Testing {i}");
@@ -94,10 +107,10 @@ namespace ExampleApp
                     sw.Start();
                     var resImpl = impl.fn(i);
                     sw.Stop();
-                    // Console.WriteLine($"Testing {i} => calls {dbgCnt}");
                     if (r0 != resImpl)
                     {
                         Console.WriteLine($"for {i} '{impl.name}', r0 = {r0} != resImpl = {resImpl}");
+                        throw new Exception($"for {i} '{impl.name}', r0 = {r0} != resImpl = {resImpl}");
                     }
                     else if (logGood)
                     {

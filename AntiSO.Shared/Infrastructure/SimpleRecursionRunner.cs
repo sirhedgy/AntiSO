@@ -1,11 +1,10 @@
 
 using System.Collections.Generic;
 
-namespace RecursionCodeGen
+namespace AntiSO.Infrastructure
 {
     public abstract class SimpleRecursionRunner<TCallParams, TResult>
     {
-        private readonly Stack<IEnumerator<TCallParams>> _stack = new Stack<IEnumerator<TCallParams>>();
         protected TResult _lastReturnValue;
 
         protected TResult RunRecursion(TCallParams callParams)

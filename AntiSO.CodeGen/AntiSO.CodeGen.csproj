@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <RootNamespace>AntiSO</RootNamespace>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Authors>SirHedgy</Authors>
+        <PackageId>AntiSO.CodeGen</PackageId>
+        <AssemblyVersion>0.1.0</AssemblyVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <!--    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftNetCompilersToolsetVersion)" PrivateAssets="all" />-->
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.8.0" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.8.0" PrivateAssets="all" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\AntiSO.Shared\AntiSO.Shared.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+        <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+    </ItemGroup>
+
+    <Target Name="CopyLibAssembliesAfterBuild" AfterTargets="Build" Condition="'$(Configuration)'=='Release'">
+        <PropertyGroup>
+            <AntiSOLibDir>$(ProjectDir)/../SampleProject/CompiledLib/</AntiSOLibDir>
+        </PropertyGroup>
+        <ItemGroup>
+            <AntiSOLibFiles Include="$(OutDir)/*.dll;$(OutDir)/*.pdb;$(OutDir)/*.deps.json" />
+            <AntiSOLibDirFiles Include="$(AntiSOLibDir)/*.dll;$(AntiSOLibDir)/*.pdb;$(AntiSOLibDir)/*.deps.json" />
+        </ItemGroup>
+        <Message Text="AntiSO: Copying files built libraries to $(AntiSOLibDir)" />
+        <Message Text="AntiSO: Deleting files: '@(AntiSOLibDirFiles)'" />
+        <Delete Files="@(AntiSOLibDirFiles)">
+            <Output TaskParameter="DeletedFiles" ItemName="DeletedList" />
+        </Delete>
+        <Message Importance="high" Text="AntiSO: Deleted files: '@(DeletedList)'" />
+        <Copy SourceFiles="@(AntiSOLibFiles)" DestinationFolder="$(AntiSOLibDir)" SkipUnchangedFiles="true" Retries="0" />
+        <Message Importance="high" Text="AntiSO: Copied built libraries from $(OutDir) to $(AntiSOLibDir)" />
+    </Target>
+</Project>

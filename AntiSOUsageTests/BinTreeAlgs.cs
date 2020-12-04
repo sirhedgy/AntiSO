@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using RecursionCodeGen;
+using AntiSO;
+using AntiSO.Infrastructure;
 
-namespace ExampleApp
+namespace AntiSOUsageTests
 {
     public class BinTree<T>
     {
@@ -17,29 +18,49 @@ namespace ExampleApp
     }
 
 
-    public static class BinTreeUtils
+    public static partial class BinTreeUtils
     {
-        public static T FinMaxRec<T>(this BinTree<T> tree) where T : IComparable<T>
+        [GenerateSafeRecursion]
+        public static T FindMaxRec<T>(this BinTree<T> tree) where T : IComparable<T>
         {
             var max = tree.Value;
-            if (tree.LeftChild != null)
+
+            if ((tree.LeftChild != null) && (tree.RightChild != null))
             {
-                var lMax = FinMaxRec(tree.LeftChild);
+                // multiple declarations with assignments
+                T tmp1 = default(T),
+                    lMax = FindMaxRec(tree.LeftChild),
+                    tmp2 = lMax,
+                    rMax = FindMaxRec(tree.RightChild);
+
                 if (lMax.CompareTo(max) > 0)
                     max = lMax;
-            }
-
-            if (tree.RightChild != null)
-            {
-                var rMax = FinMaxRec(tree.RightChild);
                 if (rMax.CompareTo(max) > 0)
                     max = rMax;
+            }
+            else
+            {
+                if (tree.LeftChild != null)
+                {
+                    var lMax = FindMaxRec(tree.LeftChild);
+                    if (lMax.CompareTo(max) > 0)
+                        max = lMax;
+                }
+
+                if (tree.RightChild != null)
+                {
+                    // var rMax = FindMaxRec(tree.RightChild);
+                    T rMax;
+                    rMax = FindMaxRec(tree.RightChild);
+                    if (rMax.CompareTo(max) > 0)
+                        max = rMax;
+                }
             }
 
             return max;
         }
 
-        public static T FinMaxNoRec<T>(this BinTree<T> tree) where T : IComparable<T>
+        public static T FindMaxNoRec<T>(this BinTree<T> tree) where T : IComparable<T>
         {
             return new FindMaxCalculator<T>().Calculate(tree);
         }
@@ -116,15 +137,17 @@ namespace ExampleApp
         {
             Console.WriteLine("================================================================================================");
             var tree = BuildTree1();
-            var res1 = tree.FinMaxRec();
-            var res2 = tree.FinMaxNoRec();
+            var res1 = tree.FindMaxRec();
+            // var res2 = tree.FidnMaxNoRec();
+            var res2 = tree.FindMaxRec_GenSafeRec();
             if (res1 != res2)
             {
                 Console.WriteLine($"res1 = {res1} != res2 = {res2}");
+                throw new Exception($"res1 = {res1} != res2 = {res2}");
             }
             else
             {
-                Console.WriteLine("FinMaxNoRec == FinMaxNoRec");
+                Console.WriteLine("FindMaxRec == FinMaxNoRec");
             }
         }
     }

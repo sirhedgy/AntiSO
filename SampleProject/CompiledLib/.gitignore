@@ -1,0 +1,5 @@
+# This ignore file is effectively a placeholder for an empty dir
+# This directory is used to store build .dlls used by the Sample project to avoid dependency on the main project
+# .dll are copied automatically here as a part of Release build of the AntiSO.CodeGen project
+*
+!.gitignore

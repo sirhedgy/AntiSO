@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+    <PackageId>AntiSOUsageTests</PackageId>
+    <Authors>SirHedgy</Authors>
+    <AssemblyVersion>0.1.0</AssemblyVersion>
+    <RootNamespace>AntiSOUsageTests</RootNamespace>
+    <IsPackable>false</IsPackable>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AntiSO.Shared\AntiSO.Shared.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="..\AntiSO.CodeGen\AntiSO.CodeGen.csproj" OutputItemType="Analyzer" />
+  </ItemGroup>
+  
+  <ItemGroup>
+<!--    <Analyzer Include="..\bin\Debug\net5.0\AntiSO.dll" />-->
+<!--    <Analyzer Include="..\AntiSO.dll" />-->
+  </ItemGroup>
+  
+</Project>

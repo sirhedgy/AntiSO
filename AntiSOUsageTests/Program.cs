@@ -1,13 +1,16 @@
 ﻿using System;
+using AntiSOUsageTests;
 
-namespace ExampleApp
+namespace AntiSOUsageTests
 {
     class Program
     {
         static void Main(string[] args)
         {
+            SimpleRecursion.TestGcd();
+            SimpleRecursion.TestFib();
             Console.WriteLine("Hello World!");
-            SimpleDoubleRecursion.TestRec();
+            SimpleDoubleRecursion.TestDoubleRec();
             BinTreeRecTest.TestMax();
         }
     }

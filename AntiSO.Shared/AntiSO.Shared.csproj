@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <RootNamespace>AntiSO</RootNamespace>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Authors>SirHedgy</Authors>
+        <PackageId>AntiSO.Shared</PackageId>
+        <AssemblyVersion>0.1.0</AssemblyVersion>
+    </PropertyGroup>
+    
+</Project>
