@@ -12,6 +12,7 @@ namespace AntiSOUsageTests
             Console.WriteLine("Hello World!");
             SimpleDoubleRecursion.TestDoubleRec();
             BinTreeRecTest.TestMax();
+            MutualRecursion.TestIsOdd();
         }
     }
 }

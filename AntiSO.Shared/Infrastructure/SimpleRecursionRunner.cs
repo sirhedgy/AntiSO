@@ -7,7 +7,7 @@ namespace AntiSO.Infrastructure
     {
         protected TResult _lastReturnValue;
 
-        protected TResult RunRecursion(TCallParams callParams)
+        public TResult RunRecursion(TCallParams callParams)
         {
             var stack = new Stack<IEnumerator<TCallParams>>();
             var curState = ComputeImpl(callParams);
