@@ -48,11 +48,13 @@ namespace AntiSOUsageTests
             }
         }
 
-        internal sealed class F2Calculator : SimpleRecursionRunner<F2CallParams, int>
+        internal sealed class F2Calculator : SimpleRecursionRunner<F2CallParams>
         {
+            private int _lastReturnValue;
             internal int Calculate(int n)
             {
-                return RunRecursion(new F2CallParams(n));
+                 RunRecursion(new F2CallParams(n));
+                 return _lastReturnValue;
             }
 
             protected override IEnumerator<F2CallParams> ComputeImpl(F2CallParams callParams)

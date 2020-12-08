@@ -27,7 +27,7 @@ namespace AntiSO.CodeGen
         internal CodeBuilder AddBlockHeader(string text = "")
         {
             _headers.Add(text);
-            int prefixLength = 0;
+            int prefixLength;
             for (prefixLength = 0; prefixLength < text.Length; prefixLength++)
             {
                 if (!char.IsWhiteSpace(text[prefixLength]))
@@ -37,6 +37,10 @@ namespace AntiSO.CodeGen
             if (text[^1] == '\n')
             {
                 _headers.Add(text.Substring(0, prefixLength) + "{\n");
+            }
+            else if (char.IsWhiteSpace(text[^1]))
+            {
+                _headers.Add("{\n");
             }
             else
             {

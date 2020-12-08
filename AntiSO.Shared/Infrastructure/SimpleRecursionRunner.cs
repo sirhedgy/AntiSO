@@ -3,11 +3,9 @@ using System.Collections.Generic;
 
 namespace AntiSO.Infrastructure
 {
-    public abstract class SimpleRecursionRunner<TCallParams, TResult>
+    public abstract class SimpleRecursionRunner<TCallParams>
     {
-        protected TResult _lastReturnValue;
-
-        public TResult RunRecursion(TCallParams callParams)
+        public void RunRecursion(TCallParams callParams)
         {
             var stack = new Stack<IEnumerator<TCallParams>>();
             var curState = ComputeImpl(callParams);
@@ -28,8 +26,6 @@ namespace AntiSO.Infrastructure
                         break;
                 }
             }
-
-            return _lastReturnValue;
         }
 
         protected abstract IEnumerator<TCallParams> ComputeImpl(TCallParams callParams);

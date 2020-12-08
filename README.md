@@ -103,6 +103,14 @@ So you add something like this to your .csproj file:
     </ItemGroup>
 ```
 
+You also might want to add something like this to your .csproj file to see the generated code: 
+
+```XML
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\GeneratedFiles</CompilerGeneratedFilesOutputPath>
+```
+
+
 In your code you turn on the code generation by using the `GenerateSafeRecursionAttribute` from the `AntiSO` namespace from the `AntiSO.Shared` assembly:
 
 ```C#   
@@ -121,7 +129,7 @@ public static partial class Fibonacci {
 }
 ```
 
-This will generate additional code for the `Fibonacci` partial class with the following signature for the entry point:
+This will generate an additional code for the `Fibonacci` partial class with the following signature for the entry point:
 
 ```C#   
 public static long Fib(this int n)
@@ -129,11 +137,18 @@ public static long Fib(this int n)
 
 ## `GenerateSafeRecursionAttribute` configuration
 
-The code generation is controlled by the `GenerateSafeRecursionAttribute`. All its properties are optional. Their defaults are:
+The code generation is controlled by the `GenerateSafeRecursionAttribute`. All its properties are optional. Their meaning and defaults are:
 
 - If `GeneratedMethodName` is missing or `null`, the default name will be `{OriginalMethodName}_GenSafeRec` where `_GenSafeRec` is a fixed suffix also known as the `GenerateSafeRecursionAttribute.DefaultNameSuffix`
+
 - If `AccessLevel` is missing then the new method will have the same access level as the original one
+
 - `ExtensionMethod` controls whether the new generated method is an extension method or a usual one. By default the new method is the same as the original one.
+
+- `MutualRecursionId` is used to mark a group of methods that are a part of the same mutual recursion. It should be `null` for usual cases. See an [example](#mutual-recursion-example) below for more details.
+
+- `ExposeAsEntryPoint` only makes sense for mutual recursion. It allows to expose only some of the recursive methods in the group and hide the others. See an [example](#mutual-recursion-example) below for more details.
+
 
 Expected usages of `GenerateSafeRecursionAttribute` follow one of the two typical scenarios:
 
@@ -141,6 +156,45 @@ Expected usages of `GenerateSafeRecursionAttribute` follow one of the two typica
 
 - If you want to use the generated code only, you make your original method `private` and decorate it with some suffix, and use `GenerateSafeRecursionAttribute` as in the `Fibonacci` example above: you specify nice `GeneratedMethodName`, your required `AccessLevel` (typically `Public`), and optionally turn on `ExtensionMethod`.
 
+
+### Mutual recursion example
+
+Mutual recursion is supported but it requires you to explicitly mark all the methods that call each other with the `GenerateSafeRecursionAttribute`. To show that the methods are a part of the same mutual recursion you use the `MutualRecursionId` property with the same string constant. Note that currently all such methods must be in the same class and in the same file. Also generics support is very limited. Essentially all the mutual recursive methods should have exactly the same set of generic parameters in exactly the same order with exactly the same `where` constraints.
+
+The following mutually recursive code
+
+```C#   
+public partial class MutualRecursion
+{
+    private const string OddEvenMutualRecursionId = "IsOddEven";
+
+
+    [GenerateSafeRecursion(MutualRecursionId = OddEvenMutualRecursionId, GeneratedMethodName= "IsOdd", AccessLevel = AccessLevel.Public, ExposeAsEntryPoint = true)]
+    private static bool IsOddRec(int n)
+    {
+        if (n < 0)
+            return IsOddRec(-n);
+        var isEven = IsEvenRec(n);
+        return !isEven;
+    }
+
+    [GenerateSafeRecursion(MutualRecursionId = OddEvenMutualRecursionId, ExposeAsEntryPoint = false)]
+    private static bool IsEvenRec(int n)
+    {
+        if (n == 0)
+            return true;
+        return IsOddRec(n - 1);
+    }
+}
+```
+
+will generate an additional code for the `MutualRecursion` partial class with the following signature for the entry point:
+
+```C#
+public static bool IsOdd(int n)   
+```
+
+Note that no entry point will be generated for `IsEvenRec` method because `ExposeAsEntryPoint` is configured to be `false`.
 
 ### Sample Project
 You can find trivial sample projects (library + app) in the [SampleProject](SampleProject) folder.
@@ -190,13 +244,12 @@ int Foo(int p1, int p2) {
 
 - Multithreading and synchronization/locks are not supported. 
 
-- Mutual recursion is not supported.
+- Mutual recursion support is only half-automatic and requires all the methods to be in the same class. Also generics support in a mutual recursion is very limited.
 
 
 # TODO List
 
 - Support methods with `out` parameters
-- Support at least some cases of mutual recursion
 - Write some proper tests
 - Support recursive calls inside at least simple arithmetic expressions
 - Support recursive calls in variable declaration inside `for` and `foreach` (what is a good example of `foreach`?)

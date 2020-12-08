@@ -16,6 +16,15 @@ namespace AntiSO
         public AccessLevel AccessLevel { get; set; } = AccessLevel.CopyExisting;
 
         public ExtensionMethod ExtensionMethod { get; set; } = ExtensionMethod.CopyExisting;
+
+        public string MutualRecursionId { get; set; }
+
+        /// <summary>
+        /// This property makes sense only if <see cref="MutualRecursionId"/> is set.
+        /// It allows you to control which of the mutual recursion methods will be exposed as entry
+        /// points and which will remain as inaccessible implementation details.
+        /// </summary>
+        public bool ExposeAsEntryPoint { get; set; } = true;
     }
 
     public enum AccessLevel

@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AntiSO.CodeGen
+namespace AntiSO.CodeGen.Recursion
 {
     /// <summary>
     /// Mathces the structure of <see cref="GenerateSafeRecursionAttribute"/>
@@ -12,6 +12,9 @@ namespace AntiSO.CodeGen
 
         internal ExtensionMethod ExtensionMethod { get; private set; }
         internal string GeneratedMethodName { get; private set; }
+
+        internal string MutualRecursionId { get; private set; }
+        internal bool ExposeAsEntryPoint { get; private set; }
 
         private SafeRecursionCodeGenProps()
         {
@@ -32,6 +35,12 @@ namespace AntiSO.CodeGen
                         break;
                     case nameof(GenerateSafeRecursionAttribute.ExtensionMethod):
                         props.ExtensionMethod = (ExtensionMethod) value.Value;
+                        break;
+                    case nameof(GenerateSafeRecursionAttribute.MutualRecursionId):
+                        props.MutualRecursionId = (string) value.Value;
+                        break;
+                    case nameof(GenerateSafeRecursionAttribute.ExposeAsEntryPoint):
+                        props.ExposeAsEntryPoint = (bool) value.Value;
                         break;
                     default:
                         context.LogInternalError(methodSyntax.GetLocation(), $"Unexpected GenerateSafeRecursionAttribute property '{name}' = '{value.Value}'");

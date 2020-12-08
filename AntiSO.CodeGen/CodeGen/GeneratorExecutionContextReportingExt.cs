@@ -24,6 +24,9 @@ namespace AntiSO.CodeGen
 
         private static readonly DiagnosticDescriptor BadSyntaxWarningDesc =
             new DiagnosticDescriptor("RG3", "Potentially unsupported syntax", "{0}", "RG", DiagnosticSeverity.Warning, true);
+        
+        private static readonly DiagnosticDescriptor ConfigurationWarningDesc =
+            new DiagnosticDescriptor("RG4", "Potentially bad configuration", "{0}", "RG", DiagnosticSeverity.Warning, true);
 
         private static string ProcessMessage(string msg)
         {
@@ -91,6 +94,11 @@ namespace AntiSO.CodeGen
         internal static void ReportUnsupportedSyntaxWarning(this GeneratorExecutionContext context, CSharpSyntaxNode node, string message)
         {
             context.ReportDiagnostic(Diagnostic.Create(BadSyntaxWarningDesc, node.GetLocation(), ProcessMessage(message)));
+        }
+
+        internal static void ReportConfigurationWarning(this GeneratorExecutionContext context, CSharpSyntaxNode node, string message)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(ConfigurationWarningDesc, node.GetLocation(), ProcessMessage(message)));
         }
     }
 }

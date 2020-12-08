@@ -75,9 +75,11 @@ namespace AntiSOUsageTests
             }
         }
 
-        internal class FindMaxCalculator<T> : SimpleRecursionRunner<FindMaxCallParams<T>, T>
+        internal class FindMaxCalculator<T> : SimpleRecursionRunner<FindMaxCallParams<T>>
             where T : IComparable<T>
         {
+            private T _lastReturnValue;
+
             protected override IEnumerator<FindMaxCallParams<T>> ComputeImpl(FindMaxCallParams<T> callParams)
             {
                 var max = callParams.tree.Value;
@@ -102,7 +104,8 @@ namespace AntiSOUsageTests
 
             public T Calculate(BinTree<T> tree)
             {
-                return RunRecursion(new FindMaxCallParams<T>(tree));
+                RunRecursion(new FindMaxCallParams<T>(tree));
+                return _lastReturnValue;
             }
         }
     }

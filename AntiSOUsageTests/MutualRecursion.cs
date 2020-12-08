@@ -2,24 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using AntiSO.Infrastructure;
+using AntiSO;
+// using AntiSO.Infrastructure;
 
 namespace AntiSOUsageTests
 {
-    public class MutualRecursion
+    public partial class MutualRecursion
     {
         private static bool IsOdd0(int n)
         {
             return n % 2 != 0;
         }
 
+        private const string OddEvenMutualRecursionId = "IsOddEven";
+
+
+        [GenerateSafeRecursion(MutualRecursionId = OddEvenMutualRecursionId, ExposeAsEntryPoint = true)]
         public static bool IsOddRec(int n)
         {
             if (n < 0)
                 return IsOddRec(-n);
-            return !IsEvenRec(n);
+            var isEven = IsEvenRec(n);
+            return !isEven;
         }
 
+        [GenerateSafeRecursion(MutualRecursionId = OddEvenMutualRecursionId, ExposeAsEntryPoint = true)]
         public static bool IsEvenRec(int n)
         {
             if (n == 0)
@@ -62,21 +69,21 @@ namespace AntiSOUsageTests
                 [FieldOffset(0)]
                 internal readonly Method Method;
 
-                [FieldOffset(4)]
+                [FieldOffset(sizeof(int))]
                 internal readonly IsOddRecParams IsOddRecParams;
 
                 [FieldOffset(4)]
                 internal readonly IsEvenRecParams IsEvenRecParams;
 
-                internal CallParams(Method method, IsOddRecParams isOddRecParams) : this()
+                internal CallParams(IsOddRecParams isOddRecParams) : this()
                 {
-                    Method = method;
+                    Method = Method.IsOddRec;
                     IsOddRecParams = isOddRecParams;
                 }
 
-                internal CallParams(Method method, IsEvenRecParams isEvenRecParams) : this()
+                internal CallParams(IsEvenRecParams isEvenRecParams) : this()
                 {
-                    Method = method;
+                    Method = Method.IsEvenRec;
                     IsEvenRecParams = isEvenRecParams;
                 }
 
@@ -95,16 +102,22 @@ namespace AntiSOUsageTests
 
             internal static bool IsOdd(int n)
             {
-                return new IsOddRecursionRunner().RunRecursion(new CallParams(Method.IsOddRec, new IsOddRecParams(n)));
+                var runner = new IsOddRecursionRunner();
+                runner.RunRecursion(new CallParams(new IsOddRecParams(n)));
+                return runner._lastReturnValue;
             }
 
             internal static bool IsEven(int n)
             {
-                return new IsOddRecursionRunner().RunRecursion(new CallParams(Method.IsEvenRec, new IsEvenRecParams(n)));
+                var runner = new IsOddRecursionRunner();
+                runner.RunRecursion(new CallParams(new IsEvenRecParams(n)));
+                return runner._lastReturnValue;
             }
 
-            private class IsOddRecursionRunner : SimpleRecursionRunner<CallParams,bool >
+            private class IsOddRecursionRunner : AntiSO.Infrastructure.SimpleRecursionRunner<CallParams>
             {
+                internal bool _lastReturnValue;
+
                 protected override IEnumerator<CallParams> ComputeImpl(CallParams callParams)
                 {
                     switch (callParams.Method)
@@ -114,7 +127,7 @@ namespace AntiSOUsageTests
                         case Method.IsOddRec:
                             return IsOddRec(callParams.IsOddRecParams.n);
                         default:
-                            throw new InvalidOperationException($"Unexpected method call ${callParams.Method}");
+                            throw new InvalidOperationException($"Unexpected method call {callParams.Method}");
                     }
                 }
 
@@ -122,11 +135,13 @@ namespace AntiSOUsageTests
                 {
                     if (n < 0)
                     {
-                        yield return new CallParams(Method.IsOddRec, new IsOddRecParams(-n));
+                        //return !IsEvenRec(-n);
+                        yield return new CallParams(new IsOddRecParams(-n));
                         yield break;
                     }
 
-                    yield return new CallParams(Method.IsEvenRec, new IsEvenRecParams(n));
+                    //return !IsEvenRec(n);
+                    yield return new CallParams(new IsEvenRecParams(n));
                     _lastReturnValue = !_lastReturnValue;
                 }
 
@@ -138,7 +153,8 @@ namespace AntiSOUsageTests
                         yield break;
                     }
 
-                    yield return new CallParams(Method.IsOddRec, new IsOddRecParams(n - 1));
+                    //return !IsOddRec(n-1);
+                    yield return new CallParams(new IsOddRecParams(n - 1));
                 }
             }
         }
@@ -163,7 +179,8 @@ namespace AntiSOUsageTests
             IsOddImpl[] impls = new IsOddImpl[]
             {
                 new IsOddImpl("IsOddRec", IsOddRec),
-                new IsOddImpl("IsOddManual", Manual.IsOdd)
+                new IsOddImpl("IsOddManual", Manual.IsOdd),
+                new IsOddImpl("IsOddRec_GenSafeRec", IsOddRec_GenSafeRec),
             };
 
             const bool logGood = true;
@@ -182,6 +199,7 @@ namespace AntiSOUsageTests
                     if (r0 != resImpl)
                     {
                         Console.WriteLine($"for {i} '{impl.Name}', r0 = {r0} != resImpl = {resImpl}");
+                        throw new Exception($"for {i} '{impl.Name}', r0 = {r0} != resImpl = {resImpl}");
                     }
                     else if (logGood)
                     {

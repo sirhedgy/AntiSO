@@ -9,10 +9,12 @@ namespace AntiSOUsageTests
         {
             SimpleRecursion.TestGcd();
             SimpleRecursion.TestFib();
-            Console.WriteLine("Hello World!");
             SimpleDoubleRecursion.TestDoubleRec();
             BinTreeRecTest.TestMax();
             MutualRecursion.TestIsOdd();
+
+            Console.WriteLine();
+            Console.WriteLine("Everything is good");
         }
     }
 }

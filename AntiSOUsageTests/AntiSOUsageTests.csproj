@@ -19,9 +19,4 @@
     <ProjectReference Include="..\AntiSO.CodeGen\AntiSO.CodeGen.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
   
-  <ItemGroup>
-<!--    <Analyzer Include="..\bin\Debug\net5.0\AntiSO.dll" />-->
-<!--    <Analyzer Include="..\AntiSO.dll" />-->
-  </ItemGroup>
-  
 </Project>
