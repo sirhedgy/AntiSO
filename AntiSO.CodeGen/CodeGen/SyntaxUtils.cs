@@ -12,6 +12,16 @@ namespace AntiSO.CodeGen
             return node.ToFullString().Trim();
         }
 
+        internal static bool IsVoidType(this TypeSyntax typeSyntax)
+        {
+            if ((typeSyntax is PredefinedTypeSyntax predefinedTypeSyntax) )
+            {
+                return SyntaxKind.VoidKeyword == predefinedTypeSyntax.Keyword.Kind();
+            }
+
+            return false;
+        }
+
         internal static BlockSyntax GetBlockFromCodeString(SyntaxNode origNode, string code, bool removeBraces = false)
         {
             var origCode = origNode.ToFullStringTrimmed().Replace("\n", "\n//");

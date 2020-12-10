@@ -10,7 +10,8 @@ namespace AntiSOUsageTests
             SimpleRecursion.TestGcd();
             SimpleRecursion.TestFib();
             SimpleDoubleRecursion.TestDoubleRec();
-            BinTreeRecTest.TestMax();
+            BinTreeRecTest.TestFindMax();
+            BinTreeRecTest.TestDfs();
             MutualRecursion.TestIsOdd();
 
             Console.WriteLine();

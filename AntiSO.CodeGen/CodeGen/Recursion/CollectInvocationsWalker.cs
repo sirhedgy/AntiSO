@@ -12,6 +12,9 @@ namespace AntiSO.CodeGen.Recursion
     {
         public bool ContainsCriticalFailure = false;
 
+        public readonly List<(InvocationExpressionSyntax invocation, ExpressionStatementSyntax containingStatement)> VoidCalls =
+            new List<(InvocationExpressionSyntax invocation, ExpressionStatementSyntax containingStatement)>();
+
         public readonly List<(AssignmentExpressionSyntax assignment, ExpressionStatementSyntax containingStatement, BlockSyntax containingBlock)> Assignments =
             new List<(AssignmentExpressionSyntax, ExpressionStatementSyntax, BlockSyntax )>();
 
@@ -81,6 +84,15 @@ namespace AntiSO.CodeGen.Recursion
 
             switch (parent.Kind())
             {
+                case SyntaxKind.ExpressionStatement:
+                {
+                    // In a case of a call of a void method or a call such that return value is ignored
+                    // the next parent seems to not matter at all.
+                    var exprSyntax = (ExpressionStatementSyntax) parent;
+                    _nodesToReplace.VoidCalls.Add((inv, exprSyntax));
+                    return true;
+                }
+
                 case SyntaxKind.SimpleAssignmentExpression:
                 {
                     var assignment = (AssignmentExpressionSyntax) parent;

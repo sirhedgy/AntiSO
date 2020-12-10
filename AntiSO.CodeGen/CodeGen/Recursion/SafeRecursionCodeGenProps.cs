@@ -4,17 +4,17 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace AntiSO.CodeGen.Recursion
 {
     /// <summary>
-    /// Mathces the structure of <see cref="GenerateSafeRecursionAttribute"/>
+    /// Matches the structure of <see cref="GenerateSafeRecursionAttribute"/>
     /// </summary>
     internal class SafeRecursionCodeGenProps
     {
-        internal AccessLevel AccessLevel { get; private set; }
+        internal AccessLevel AccessLevel { get; private set; } = AccessLevel.CopyExisting;
 
-        internal ExtensionMethod ExtensionMethod { get; private set; }
+        internal ExtensionMethod ExtensionMethod { get; private set; } = ExtensionMethod.CopyExisting;
         internal string GeneratedMethodName { get; private set; }
 
         internal string MutualRecursionId { get; private set; }
-        internal bool ExposeAsEntryPoint { get; private set; }
+        internal bool ExposeAsEntryPoint { get; private set; } = true; // copy default from the attribute as well!
 
         private SafeRecursionCodeGenProps()
         {

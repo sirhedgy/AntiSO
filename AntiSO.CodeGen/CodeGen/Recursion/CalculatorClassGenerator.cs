@@ -277,7 +277,7 @@ namespace AntiSO.CodeGen.Recursion
             }
         }
 
-        private static string GenerateSimpleCalculatorClass(RecursiveCalculatorClassInfo classInfo, List<CalculatorMethodGenerator> methodGens, TargetMethodsInfo targetMethods)
+        private string GenerateSimpleCalculatorClass(RecursiveCalculatorClassInfo classInfo, List<CalculatorMethodGenerator> methodGens, TargetMethodsInfo targetMethods)
         {
             var code = new CodeBuilder();
 
@@ -288,7 +288,10 @@ namespace AntiSO.CodeGen.Recursion
                         {methodInfo.ConstraintClauses}");
 
             // single field for the return value
-            code.AddHeaderLine($"\tinternal {methodInfo.ReturnType} {methodInfo.ReturnFieldName};");
+            if (methodInfo.ShouldGenerateReturnField)
+            {
+                code.AddHeaderLine($"\tinternal {methodInfo.ReturnType} {methodInfo.ReturnFieldName};");
+            }
             code.AddHeaderLine();
             // actual recursive method
             code.AddBlockHeader($"\tprotected override IEnumerator<{methodInfo.MethodParamsStructName}{methodInfo.GenericParams}>"
@@ -298,7 +301,7 @@ namespace AntiSO.CodeGen.Recursion
         }
 
 
-        private static string GenerateMultiSiteCalculatorClass(RecursiveCalculatorClassInfo classInfo, List<CalculatorMethodGenerator> methodGens, TargetMethodsInfo targetMethods)
+        private string GenerateMultiSiteCalculatorClass(RecursiveCalculatorClassInfo classInfo, List<CalculatorMethodGenerator> methodGens, TargetMethodsInfo targetMethods)
         {
             var code = new CodeBuilder();
 
@@ -311,7 +314,10 @@ namespace AntiSO.CodeGen.Recursion
             foreach (var methodGen in methodGens)
             {
                 var methodInfo = methodGen.MethodInfo;
-                code.AddHeaderLine($"\t\tinternal {methodInfo.ReturnType} {methodInfo.ReturnFieldName};");
+                if (methodInfo.ShouldGenerateReturnField)
+                {
+                    code.AddHeaderLine($"\t\tinternal {methodInfo.ReturnType} {methodInfo.ReturnFieldName};");
+                }
             }
 
             // the dispatcher method

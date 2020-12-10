@@ -20,6 +20,8 @@ namespace AntiSOUsageTests
 
     public static partial class BinTreeUtils
     {
+        #region FindMax
+
         [GenerateSafeRecursion]
         public static T FindMaxRec<T>(this BinTree<T> tree) where T : IComparable<T>
         {
@@ -108,6 +110,45 @@ namespace AntiSOUsageTests
                 return _lastReturnValue;
             }
         }
+
+        #endregion
+
+
+        #region Dfs
+
+        [GenerateSafeRecursion(GeneratedMethodName = "DfsNoRec")]
+        public static void DfsRec<T>(BinTree<T> tree, Action<T> action) where T : IComparable<T>
+        {
+            if (tree.LeftChild != null)
+                DfsRec<T>(tree.LeftChild, action);
+            if (tree.RightChild != null)
+                DfsRec(tree.RightChild, action);
+            action(tree.Value);
+        }
+
+        [GenerateSafeRecursion(GeneratedMethodName = "DfsMutNoRec", MutualRecursionId = "DfsMutNoRec")]
+        public static void DfsMutRec<T>(BinTree<T> tree, Action<T> action) where T : IComparable<T>
+        {
+            if (tree.LeftChild != null)
+                DfsMutLeftRec<T>(tree.LeftChild, action);
+            if (tree.RightChild != null)
+                DfsRec(tree.RightChild, action);
+            action(tree.Value);
+        }
+
+        [GenerateSafeRecursion(MutualRecursionId = "DfsMutNoRec", ExposeAsEntryPoint = false)]
+        public static void DfsMutLeftRec<T>(BinTree<T> tree, Action<T> action) where T : IComparable<T>
+        {
+            if (tree.LeftChild != null)
+                // DfsMutLeftRec<T>(tree.LeftChild, action);
+                DfsMutLeftRec(tree.LeftChild, action);
+            if (tree.RightChild != null)
+                // DfsMutRec(tree.RightChild, action);
+                DfsMutRec<T>(tree.RightChild, action);
+            action(tree.Value);
+        }
+
+        #endregion
     }
 
     static class BinTreeRecTest
@@ -136,7 +177,7 @@ namespace AntiSOUsageTests
             return BuildTreeImpl(rnd, 1024, 100);
         }
 
-        public static void TestMax()
+        public static void TestFindMax()
         {
             Console.WriteLine("================================================================================================");
             var tree = BuildTree1();
@@ -145,13 +186,55 @@ namespace AntiSOUsageTests
             var res2 = tree.FindMaxRec_GenSafeRec();
             if (res1 != res2)
             {
-                Console.WriteLine($"res1 = {res1} != res2 = {res2}");
-                throw new Exception($"res1 = {res1} != res2 = {res2}");
+                Console.WriteLine($"FindMax res1 = {res1} != res2 = {res2}");
+                throw new Exception($"FindMax res1 = {res1} != res2 = {res2}");
             }
             else
             {
                 Console.WriteLine("FindMaxRec == FinMaxNoRec");
             }
         }
+
+        #region Dfs
+
+        private delegate void DfsDelegate(BinTree<int> tree, Action<int> action);
+
+        private static long SumUsingDfs(BinTree<int> tree, DfsDelegate dfs)
+        {
+            long sum = 0;
+            dfs(tree, value => sum += value);
+            return sum;
+        }
+
+        public static void TestDfs()
+        {
+            Console.WriteLine("================================================================================================");
+            var tree = BuildTree1();
+            var res1 = SumUsingDfs(tree, BinTreeUtils.DfsRec);
+
+            var res2 = SumUsingDfs(tree, BinTreeUtils.DfsNoRec);
+            if (res1 != res2)
+            {
+                Console.WriteLine($"Dfs res1 = {res1} != res2 = {res2}");
+                throw new Exception($"res1 = {res1} != res2 = {res2}");
+            }
+            else
+            {
+                Console.WriteLine("DfsRec == DfsNoRec");
+            }
+
+            var res3 = SumUsingDfs(tree, BinTreeUtils.DfsMutNoRec);
+            if (res1 != res3)
+            {
+                Console.WriteLine($"Dfs res1 = {res1} != res3 = {res3} Mut");
+                throw new Exception($"res1 = {res1} != res3 = {res3}");
+            }
+            else
+            {
+                Console.WriteLine("DfsRec == DfsMutNoRec");
+            }
+        }
+
+        #endregion
     }
 }

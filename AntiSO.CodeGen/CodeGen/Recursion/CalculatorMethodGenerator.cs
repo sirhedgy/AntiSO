@@ -17,6 +17,7 @@ namespace AntiSO.CodeGen.Recursion
         internal string MethodParamsStructName => MethodName + "_MethodRecCallParams";
 
         internal string ReturnFieldName => $"_{MethodName}_ReturnValue";
+        internal bool ShouldGenerateReturnField => !MethodSymbol.ReturnsVoid;
         internal string ReturnType => MethodSyntax.ReturnType.ToFullString();
         internal string GenericParams => MethodSyntax.TypeParameterList?.ToFullString() ?? "";
         internal string ConstraintClauses => MethodSyntax.ConstraintClauses.ToFullString();
@@ -202,7 +203,10 @@ namespace AntiSO.CodeGen.Recursion
 
             code.AddHeaderLine($"\t\tvar runner = new {_calculatorClassInfo.CalculatorClassName}{_calculatorClassInfo.GenericParams}();");
             code.AddHeaderLine($"\t\trunner.RunRecursion({ParamsVarName});");
-            code.AddHeaderLine($"\t\treturn runner.{_methodInfo.ReturnFieldName};");
+            if (_methodInfo.ShouldGenerateReturnField)
+            {
+                code.AddHeaderLine($"\t\treturn runner.{_methodInfo.ReturnFieldName};");
+            }
         }
 
         #endregion
@@ -231,6 +235,7 @@ namespace AntiSO.CodeGen.Recursion
             }
 
             _context.Log(_methodInfo.MethodSyntax.GetLocation(), $"'{_methodInfo.MethodSymbol.Name}':" +
+                                                                 $" {nodesToReplace.VoidCalls.Count} void call(s)" +
                                                                  $" {nodesToReplace.Assignments.Count} assignment(s)" +
                                                                  $", {nodesToReplace.DeclarationAndAssignments.Count} var declaration(s)" +
                                                                  $", {nodesToReplace.ReturnsRecursive.Count} recursive call(s) in return(s)" +
@@ -240,6 +245,7 @@ namespace AntiSO.CodeGen.Recursion
             // process all supported kinds of recursive invocations 
             var allNodesToReplace = nodesToReplace.Returns.Cast<StatementSyntax>()
                 .Concat(nodesToReplace.ReturnsRecursive)
+                .Concat(nodesToReplace.VoidCalls.Select(t => t.containingStatement))
                 .Concat(nodesToReplace.Assignments.Select((t) => t.containingStatement))
                 .Concat(nodesToReplace.DeclarationAndAssignments.Select(t => t.containingStatement));
             var newRoot = _methodInfo.MethodSyntax.Body.ReplaceNodes(allNodesToReplace, (origNode, curNode) =>
@@ -251,7 +257,20 @@ namespace AntiSO.CodeGen.Recursion
                         return ReplaceReturn(targetMethods, (ReturnStatementSyntax) origNode, (ReturnStatementSyntax) curNode);
 
                     case SyntaxKind.ExpressionStatement:
-                        return ReplaceAssignment(targetMethods, (ExpressionStatementSyntax) origNode, (ExpressionStatementSyntax) curNode);
+                        var origExpressionNode = (ExpressionStatementSyntax) origNode;
+                        var expression = origExpressionNode.Expression;
+                        switch (expression.Kind())
+                        {
+                            case SyntaxKind.InvocationExpression:
+                                return ReplaceVoidCall(targetMethods, origExpressionNode, (ExpressionStatementSyntax) curNode);
+                            
+                            case SyntaxKind.SimpleAssignmentExpression:
+                                return ReplaceAssignment(targetMethods, origExpressionNode, (ExpressionStatementSyntax) curNode);
+                            
+                            default:
+                                throw new AntiSOGenException($"Unexpected expression kind {expression.Kind()} to replace {origNode.ToFullStringTrimmed()}");
+                        }
+
 
                     case SyntaxKind.LocalDeclarationStatement:
                         return ReplaceLocalVarDeclrAssignment(targetMethods, (LocalDeclarationStatementSyntax) origNode, (LocalDeclarationStatementSyntax) curNode);
@@ -277,7 +296,7 @@ namespace AntiSO.CodeGen.Recursion
                 if (targetMethod != null)
                 {
                     // only needed for mutual recursion where fields might be different
-                    var copyReturnValueLine = (_methodInfo != targetMethod)
+                    var copyReturnValueLine = (_methodInfo != targetMethod) && _methodInfo.ShouldGenerateReturnField
                         ? $"{_methodInfo.ReturnFieldName} = {targetMethod.ReturnFieldName}; // copy the return value"
                         : "";
 
@@ -293,13 +312,22 @@ namespace AntiSO.CodeGen.Recursion
                     yield break;");
         }
 
-        private SyntaxNode ReplaceAssignment(TargetMethodsInfo targetMethodsInfo, ExpressionStatementSyntax origNode, ExpressionStatementSyntax curNode)
+        private SyntaxNode ReplaceVoidCall(TargetMethodsInfo targetMethods, ExpressionStatementSyntax origNode, ExpressionStatementSyntax curNode)
+        {
+            var inv = (InvocationExpressionSyntax) origNode.Expression;
+            var targetMethod = GetInvocationRecursiveCallTarget(targetMethods, inv);
+            return SyntaxUtils.GetBlockFromCodeString(origNode, @$"
+                    yield return new {targetMethod.MethodParamsStructName}{targetMethod.GenericParams}{inv.ArgumentList.ToFullString()};");
+        }
+
+        private SyntaxNode ReplaceAssignment(TargetMethodsInfo targetMethods, ExpressionStatementSyntax origNode, ExpressionStatementSyntax curNode)
         {
             var assignment = (AssignmentExpressionSyntax) origNode.Expression;
             var inv = (InvocationExpressionSyntax) assignment.Right;
+            var targetMethod = GetInvocationRecursiveCallTarget(targetMethods, inv);
             var ident = (IdentifierNameSyntax) assignment.Left;
             return SyntaxUtils.GetBlockFromCodeString(origNode, @$"
-                    yield return new {_methodInfo.MethodParamsStructName}{_methodInfo.GenericParams}{inv.ArgumentList.ToFullString()};
+                    yield return new {targetMethod.MethodParamsStructName}{targetMethod.GenericParams}{inv.ArgumentList.ToFullString()};
                     {ident.ToFullString()} = {_methodInfo.ReturnFieldName};");
         }
 

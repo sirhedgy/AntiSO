@@ -36,7 +36,28 @@ namespace AntiSO.CodeGen.Recursion
 
         private static bool Cmp(ISymbol s1, ISymbol s2)
         {
-            return s1.Equals(s2, SymbolEqualityComparer.Default);
+            if (s1.Equals(s2, SymbolEqualityComparer.Default))
+                return true;
+
+            // handle generic method calls by using the ConstructedFrom
+            {
+                var cf1 = s1;
+                if (s1 is IMethodSymbol ms1)
+                {
+                    cf1 = ms1.ConstructedFrom;
+                }
+
+                var cf2 = s2;
+                if (s1 is IMethodSymbol ms2)
+                {
+                    cf2 = ms2.ConstructedFrom;
+                }
+
+                if (cf1.Equals(cf2, SymbolEqualityComparer.Default))
+                    return true;
+            }
+
+            return false;
         }
 
         private List<RecursiveMethodInfo> GetListImpl(string key, bool addIfMissing = false)
